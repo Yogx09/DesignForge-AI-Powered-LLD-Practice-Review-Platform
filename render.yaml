@@ -3,7 +3,7 @@ services:
     name: cipher-lld-studio
     env: node
     plan: free
-    buildCommand: "npm install && npm --prefix backend install && npm --prefix frontend install && npm run build"
+    buildCommand: "npm install --include=dev && npm --prefix backend install --include=dev && npm --prefix frontend install --include=dev && npm run build"
     startCommand: "node backend/dist/server.js"
     envVars:
       - key: NODE_ENV
