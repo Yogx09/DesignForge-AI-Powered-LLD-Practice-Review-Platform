@@ -6,10 +6,12 @@ import {
   TrendingUp,
   GraduationCap,
   Bot,
-  Bookmark,
   Settings,
   Sparkles,
-  FileText
+  FileText,
+  Zap,
+  Code2,
+  ShieldCheck
 } from 'lucide-react';
 
 export type NavTab =
@@ -34,26 +36,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   solvedCount
 }) => {
-  const navItems = [
+  const mainNav = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'problems', label: 'Problems', icon: Box },
-    { id: 'attempts', label: 'My Attempts', icon: FileCheck2 },
-    { id: 'progress', label: 'Progress', icon: TrendingUp },
-    { id: 'learning', label: 'Learning Paths', icon: GraduationCap },
-    { id: 'mentor', label: 'AI Mentor', icon: Bot },
-    { id: 'docs', label: 'Reviewer Notes', icon: FileText },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'problems', label: 'Problem Catalog', icon: Box, badge: '7' },
+    { id: 'attempts', label: 'Attempt History', icon: FileCheck2 },
+    { id: 'progress', label: 'Skill Analytics', icon: TrendingUp }
+  ];
+
+  const toolsNav = [
+    { id: 'mentor', label: 'AI Design Mentor', icon: Bot, isNew: true },
+    { id: 'docs', label: 'Reviewer Guide & Specs', icon: FileText },
+    { id: 'learning', label: 'Design Patterns', icon: GraduationCap }
   ];
 
   return (
     <aside style={{
-      width: 260,
+      width: 250,
       background: 'var(--bg-sidebar)',
       borderRight: '1px solid var(--border-subtle)',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
-      padding: '20px 16px',
+      padding: '20px 14px',
       height: '100vh',
       position: 'sticky',
       top: 0,
@@ -68,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             alignItems: 'center',
             gap: 10,
             cursor: 'pointer',
-            padding: '4px 8px 20px',
+            padding: '2px 8px 18px',
             borderBottom: '1px solid var(--border-subtle)'
           }}
         >
@@ -76,75 +80,187 @@ export const Sidebar: React.FC<SidebarProps> = ({
             width: 36,
             height: 36,
             borderRadius: 10,
-            background: 'linear-gradient(135deg, #6366f1, #4338ca)',
+            background: 'var(--accent-gradient)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)'
+            boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)'
           }}>
-            <Sparkles size={20} color="#ffffff" />
+            <Sparkles size={19} color="#ffffff" />
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '1.15rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-              DesignLab
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontWeight: 800, fontSize: '1.15rem', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+                DesignLab
+              </span>
+              <span style={{
+                fontSize: '0.62rem',
+                fontWeight: 800,
+                background: 'var(--accent-soft)',
+                color: 'var(--accent-primary)',
+                padding: '2px 6px',
+                borderRadius: 4,
+                border: '1px solid var(--accent-soft-border)'
+              }}>
+                PRO
+              </span>
             </div>
             <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-              Design. Build. Improve.
+              AI-Powered LLD Studio
             </div>
           </div>
         </div>
 
-        {/* Nav Links */}
-        <nav style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onSelectTab(item.id as NavTab)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '9px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: 'none',
-                  background: isActive ? 'var(--accent-gradient)' : 'transparent',
-                  color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                  fontWeight: isActive ? 700 : 500,
-                  fontSize: '0.88rem',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.15s ease',
-                  boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.25)' : 'none'
-                }}
-              >
-                <Icon size={18} color={isActive ? '#ffffff' : 'var(--text-muted)'} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        {/* Section: MAIN WORKSPACE */}
+        <div style={{ marginTop: 18 }}>
+          <div style={{
+            fontSize: '0.68rem',
+            fontWeight: 800,
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            padding: '0 10px 8px'
+          }}>
+            Workspace
+          </div>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {mainNav.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onSelectTab(item.id as NavTab)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: 'none',
+                    background: isActive ? 'var(--accent-gradient)' : 'transparent',
+                    color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                    fontWeight: isActive ? 700 : 500,
+                    fontSize: '0.86rem',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                    boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.28)' : 'none'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Icon size={17} color={isActive ? '#ffffff' : 'var(--text-muted)'} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      padding: '1px 6px',
+                      borderRadius: 9999,
+                      background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--bg-card-subtle)',
+                      color: isActive ? '#ffffff' : 'var(--text-muted)'
+                    }}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Section: COPILOT & DOCS */}
+        <div style={{ marginTop: 18 }}>
+          <div style={{
+            fontSize: '0.68rem',
+            fontWeight: 800,
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            padding: '0 10px 8px'
+          }}>
+            Review & Learning
+          </div>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {toolsNav.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onSelectTab(item.id as NavTab)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: 'none',
+                    background: isActive ? 'var(--accent-gradient)' : 'transparent',
+                    color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                    fontWeight: isActive ? 700 : 500,
+                    fontSize: '0.86rem',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                    boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.28)' : 'none'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Icon size={17} color={isActive ? '#ffffff' : 'var(--text-muted)'} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.isNew && (
+                    <span style={{
+                      fontSize: '0.62rem',
+                      fontWeight: 800,
+                      padding: '2px 5px',
+                      borderRadius: 4,
+                      background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--accent-emerald-soft)',
+                      color: isActive ? '#ffffff' : 'var(--accent-emerald)'
+                    }}>
+                      AI
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
       </div>
 
-      {/* Bottom Promo Card & User Badge */}
+      {/* User Progression Badge & Profile */}
       <div>
-        {/* Keep Building Card */}
+        {/* Level Progression Card */}
         <div style={{
-          background: 'linear-gradient(145deg, #eef2ff, #e0e7ff)',
-          borderRadius: 'var(--radius-md)',
-          padding: '14px',
-          marginBottom: 16,
-          position: 'relative',
-          overflow: 'hidden',
-          border: '1px solid #c7d2fe'
+          background: 'var(--bg-card-subtle)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '12px 14px',
+          marginBottom: 12,
+          border: '1px solid var(--border-subtle)'
         }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#4338ca', marginBottom: 2 }}>
-            Keep Building 🚀
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              Level 3 Architect
+            </span>
+            <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
+              1,420 XP
+            </span>
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#6366f1', fontStyle: 'italic', fontWeight: 600 }}>
-            "Better Designs, Brighter Engineers"
+          <div style={{
+            height: 5,
+            width: '100%',
+            background: 'var(--border-light)',
+            borderRadius: 9999,
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              height: '100%',
+              width: '68%',
+              background: 'var(--accent-gradient)',
+              borderRadius: 9999
+            }} />
           </div>
         </div>
 
@@ -155,20 +271,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
           gap: 10,
           padding: '8px 10px',
           borderRadius: 'var(--radius-sm)',
-          background: 'var(--bg-card-subtle)',
+          background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)'
         }}>
-          <img
-            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60"
-            alt="Yogesh"
-            style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }}
-          />
-          <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+          <div style={{ position: 'relative' }}>
+            <img
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+              alt="Yogesh"
+              style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }}
+            />
+            <span style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              width: 9,
+              height: 9,
+              borderRadius: '50%',
+              background: '#10b981',
+              border: '2px solid var(--bg-sidebar)'
+            }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               Yogesh
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              Aspiring SDE
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+              Candidate Reviewer
             </div>
           </div>
         </div>
@@ -176,3 +304,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </aside>
   );
 };
+

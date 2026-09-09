@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Bot, Send, Sparkles, Lightbulb, ShieldCheck } from 'lucide-react';
+import { X, Bot, Send, Sparkles, Lightbulb, ShieldCheck, Code2, Zap } from 'lucide-react';
 
 interface AIMentorModalProps {
   isOpen: boolean;
@@ -10,40 +10,48 @@ export const AIMentorModal: React.FC<AIMentorModalProps> = ({ isOpen, onClose })
   const [messages, setMessages] = useState<Array<{ sender: 'ai' | 'user'; text: string }>>([
     {
       sender: 'ai',
-      text: 'Hello Yogesh! I am your DesignLab AI Architecture Mentor. Ask me anything about GoF Design Patterns, SOLID principles, or concurrency trade-offs for your LLD problems.'
+      text: 'Hello Yogesh! I am your DesignLab AI Architecture Mentor. Ask me anything about GoF Design Patterns, SOLID principles, concurrency trade-offs, or code structure for your LLD problems.'
     }
   ]);
   const [input, setInput] = useState('');
 
   if (!isOpen) return null;
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const userText = input;
-    setMessages(prev => [...prev, { sender: 'user', text: userText }]);
+  const quickPrompts = [
+    'How to make Parking Lot thread-safe?',
+    'Explain Strategy Pattern for pricing',
+    'What are key SOLID rules for LLD interviews?',
+    'How to handle concurrency in elevator scheduling?'
+  ];
+
+  const handleSendText = (textToSend: string) => {
+    if (!textToSend.trim()) return;
+    setMessages(prev => [...prev, { sender: 'user', text: textToSend }]);
     setInput('');
 
     setTimeout(() => {
       let reply = 'In Low-Level Design, the key is defining clear abstractions (interfaces) before concrete classes so that new features can be added without modifying existing coordinator logic (Open-Closed Principle).';
-      const lower = userText.toLowerCase();
-      if (lower.includes('parking') || lower.includes('spot')) {
-        reply = 'For Parking Lot, use the Strategy Pattern for spot finding (e.g. NearestFirstStrategy, LowestFloorFirstStrategy) and separate Spot occupancy state from Vehicle dimensions.';
+      const lower = textToSend.toLowerCase();
+      if (lower.includes('thread') || lower.includes('concurrency') || lower.includes('safe')) {
+        reply = 'To ensure thread-safety in multi-floor systems:\n1. Use ConcurrentHashMap for spot lookups by ID.\n2. Synchronize at the floor or spot level rather than locking the entire ParkingLot class to maintain high gate throughput.\n3. Use atomic state transitions (e.g. AtomicBoolean isOccupied) when reserving spots.';
+      } else if (lower.includes('strategy') || lower.includes('pricing') || lower.includes('spot')) {
+        reply = 'The Strategy Pattern encapsulates algorithms inside separate classes:\n- Define interface `IPricingStrategy` with method `calculateFee(Ticket ticket)`.\n- Create implementations: `HourlyPricingStrategy`, `FlatRateStrategy`, `WeekendSurgeStrategy`.\n- The ParkingLot or ExitGate delegates fee calculation to whichever strategy is injected at runtime without changing entity code.';
       } else if (lower.includes('elevator')) {
-        reply = 'For Elevator, use the State Pattern to represent moving, idle, and door open states. Use a SCAN/LOOK elevator scheduling algorithm to minimize passenger wait times.';
-      } else if (lower.includes('pattern') || lower.includes('solid')) {
-        reply = 'Key GoF patterns in LLD: Strategy (pluggable algorithms), Factory (object creation based on enum types), State (transition logic), and Observer (event notifications).';
+        reply = 'For Elevator Systems:\n- Use the State Pattern (IdleState, MovingUpState, MovingDownState, DoorOpenState).\n- Use the Strategy Pattern for the Dispatcher (e.g. LOOK/SCAN algorithm or Shortest-Seek-Time).\n- Ensure external HallButtons communicate with an ElevatorController that dispatches requests.';
+      } else if (lower.includes('solid') || lower.includes('pattern')) {
+        reply = 'Core SOLID guidelines for LLD:\n- S: Separate ticket generation from spot finding.\n- O: Use interfaces so new pricing or vehicle types don\'t alter existing classes.\n- L: Any vehicle subtype (Car, Bike, Truck) can park in an allocated compatible spot.\n- I: Keep interfaces small (e.g. `IParkingStrategy`, `IPaymentProcessor`).\n- D: Depend on abstractions (`IPricingStrategy`), not concrete implementations.';
       }
 
       setMessages(prev => [...prev, { sender: 'ai', text: reply }]);
-    }, 400);
+    }, 350);
   };
 
   return (
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(5, 7, 12, 0.75)',
-      backdropFilter: 'blur(8px)',
+      background: 'var(--bg-modal-backdrop)',
+      backdropFilter: 'blur(10px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -51,16 +59,17 @@ export const AIMentorModal: React.FC<AIMentorModalProps> = ({ isOpen, onClose })
       padding: 20
     }}>
       <div className="designlab-card" style={{
-        maxWidth: 620,
+        maxWidth: 680,
         width: '100%',
-        height: '75vh',
+        height: '80vh',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
       }}>
         {/* Header */}
         <div style={{
-          padding: '16px 20px',
+          padding: '16px 22px',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
@@ -69,46 +78,97 @@ export const AIMentorModal: React.FC<AIMentorModalProps> = ({ isOpen, onClose })
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
+              width: 36,
+              height: 36,
+              borderRadius: 10,
               background: 'var(--accent-gradient)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)'
             }}>
-              <Bot size={18} color="#fff" />
+              <Bot size={20} color="#fff" />
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                DesignLab AI Mentor
+              <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                DesignLab AI Architecture Mentor
               </div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                LLD Architecture Guidance
+                Powered by Gemini 2.5 Flash • Real-time LLD Guidance
               </div>
             </div>
           </div>
 
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
-            <X size={18} />
+          <button
+            onClick={onClose}
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '50%',
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)'
+            }}
+          >
+            <X size={16} />
           </button>
         </div>
 
+        {/* Quick Prompt Pills */}
+        <div style={{
+          padding: '10px 18px',
+          background: 'var(--bg-card)',
+          borderBottom: '1px solid var(--border-subtle)',
+          display: 'flex',
+          gap: 6,
+          overflowX: 'auto',
+          whiteSpace: 'nowrap'
+        }}>
+          {quickPrompts.map((qp, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSendText(qp)}
+              style={{
+                fontSize: '0.74rem',
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-pill)',
+                background: 'var(--bg-card-subtle)',
+                border: '1px solid var(--border-light)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                transition: 'all 0.15s ease'
+              }}
+              className="prompt-chip"
+            >
+              <Sparkles size={11} color="var(--accent-primary)" />
+              <span>{qp}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
           {messages.map((m, i) => (
             <div
               key={i}
               style={{
                 alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '82%',
-                padding: '10px 14px',
+                maxWidth: '85%',
+                padding: '12px 16px',
                 borderRadius: 'var(--radius-sm)',
-                background: m.sender === 'user' ? 'var(--accent-primary)' : 'var(--bg-card-subtle)',
+                background: m.sender === 'user' ? 'var(--accent-gradient)' : 'var(--bg-card-subtle)',
                 color: m.sender === 'user' ? '#ffffff' : 'var(--text-primary)',
-                fontSize: '0.85rem',
-                lineHeight: 1.5,
-                border: m.sender === 'user' ? 'none' : '1px solid var(--border-subtle)'
+                fontSize: '0.86rem',
+                lineHeight: 1.6,
+                border: m.sender === 'user' ? 'none' : '1px solid var(--border-subtle)',
+                whiteSpace: 'pre-line'
               }}
             >
               {m.text}
@@ -118,7 +178,7 @@ export const AIMentorModal: React.FC<AIMentorModalProps> = ({ isOpen, onClose })
 
         {/* Input */}
         <div style={{
-          padding: 14,
+          padding: 16,
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           gap: 10,
@@ -128,20 +188,24 @@ export const AIMentorModal: React.FC<AIMentorModalProps> = ({ isOpen, onClose })
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask AI mentor about LLD design patterns or trade-offs..."
+            onKeyDown={(e) => e.key === 'Enter' && handleSendText(input)}
+            placeholder="Ask AI mentor about design patterns, concurrency locks, or trade-offs..."
             style={{
               flex: 1,
-              padding: '8px 14px',
+              padding: '10px 16px',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-light)',
               background: 'var(--bg-card-subtle)',
               color: 'var(--text-primary)',
-              fontSize: '0.85rem',
+              fontSize: '0.88rem',
               outline: 'none'
             }}
           />
-          <button onClick={handleSend} className="btn btn-primary" style={{ padding: '8px 16px' }}>
+          <button
+            onClick={() => handleSendText(input)}
+            className="btn btn-primary"
+            style={{ padding: '10px 18px' }}
+          >
             <Send size={15} />
           </button>
         </div>
@@ -149,3 +213,4 @@ export const AIMentorModal: React.FC<AIMentorModalProps> = ({ isOpen, onClose })
     </div>
   );
 };
+

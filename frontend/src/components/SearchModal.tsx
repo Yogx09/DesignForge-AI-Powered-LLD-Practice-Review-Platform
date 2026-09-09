@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ProblemSummary } from '../types';
-import { Search, X, ArrowRight, Box } from 'lucide-react';
+import { Search, X, ArrowRight, Box, Zap, Sparkles, BookOpen, FileText } from 'lucide-react';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -47,54 +47,64 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(5, 7, 12, 0.75)',
-      backdropFilter: 'blur(8px)',
+      background: 'var(--bg-modal-backdrop)',
+      backdropFilter: 'blur(10px)',
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'center',
       zIndex: 110,
-      paddingTop: '15vh'
+      paddingTop: '12vh'
     }}>
       <div className="designlab-card" style={{
-        maxWidth: 580,
+        maxWidth: 620,
         width: '100%',
         overflow: 'hidden',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+        boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
+        border: '1px solid var(--border-light)'
       }}>
         {/* Search Input */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          padding: '14px 18px',
-          borderBottom: '1px solid var(--border-subtle)'
+          padding: '16px 20px',
+          borderBottom: '1px solid var(--border-subtle)',
+          background: 'var(--bg-card)'
         }}>
-          <Search size={18} color="var(--text-muted)" />
+          <Search size={18} color="var(--accent-primary)" />
           <input
             autoFocus
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search LLD problems, design patterns, or tags..."
+            placeholder="Search LLD problems, GoF patterns, or concepts..."
             style={{
               flex: 1,
               background: 'transparent',
               border: 'none',
-              fontSize: '0.95rem',
+              fontSize: '0.96rem',
               color: 'var(--text-primary)',
-              outline: 'none'
+              outline: 'none',
+              fontWeight: 500
             }}
           />
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
-            <X size={18} />
-          </button>
+          <kbd style={{
+            background: 'var(--bg-card-subtle)',
+            border: '1px solid var(--border-light)',
+            padding: '2px 6px',
+            borderRadius: 4,
+            fontSize: '0.7rem',
+            color: 'var(--text-muted)'
+          }}>
+            ESC
+          </kbd>
         </div>
 
         {/* Results List */}
-        <div style={{ maxHeight: 360, overflowY: 'auto', padding: 8 }}>
+        <div style={{ maxHeight: 380, overflowY: 'auto', padding: 8 }}>
           {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              No problems found matching "{query}"
+            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+              No problems found matching "<strong style={{ color: 'var(--text-primary)' }}>{query}</strong>"
             </div>
           ) : (
             filtered.map((p) => (
@@ -108,7 +118,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '10px 14px',
+                  padding: '11px 14px',
                   borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
@@ -122,24 +132,26 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
-                    width: 32,
-                    height: 32,
+                    width: 36,
+                    height: 36,
                     borderRadius: 8,
                     background: 'var(--accent-soft)',
                     color: 'var(--accent-primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontWeight: 700
+                    fontWeight: 800,
+                    fontSize: '0.9rem'
                   }}>
-                    <Box size={16} />
+                    {p.title.charAt(0)}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                       {p.title}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {p.category} • {p.difficulty}
+                    <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
+                      <span className="badge badge-medium" style={{ padding: '2px 6px', fontSize: '0.68rem' }}>{p.difficulty}</span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{p.category} • {p.timeEstimate}</span>
                     </div>
                   </div>
                 </div>
@@ -149,7 +161,23 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             ))
           )}
         </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: '10px 16px',
+          background: 'var(--bg-card-subtle)',
+          borderTop: '1px solid var(--border-subtle)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '0.74rem',
+          color: 'var(--text-muted)'
+        }}>
+          <span>Press <strong>↵ Enter</strong> to open</span>
+          <span><strong>↑↓</strong> to navigate</span>
+        </div>
       </div>
     </div>
   );
 };
+
