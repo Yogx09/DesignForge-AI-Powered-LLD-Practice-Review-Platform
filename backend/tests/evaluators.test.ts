@@ -41,9 +41,33 @@ describe('DeterministicValidator & HeuristicEvaluator', () => {
     expect(checks.some(c => !c.passed)).toBe(true);
   });
 
+  it('should fail validation and score <= 12 for 2-line or stub submissions', async () => {
+    const stubSubmission: SubmissionContent = {
+      assumptions: '',
+      diagramMermaid: '',
+      code: `class ParkingLot {\n}`,
+      language: 'typescript',
+      designRationale: ''
+    };
+
+    const { isValid } = validator.validate(parkingLotProblem, stubSubmission);
+    expect(isValid).toBe(false);
+
+    const evalResult = await heuristicEvaluator.evaluate(
+      parkingLotProblem,
+      stubSubmission,
+      'test-stub-attempt',
+      'test-stub-sub'
+    );
+
+    expect(evalResult.status).toBe('COMPLETED');
+    expect(evalResult.overallScore).toBeLessThanOrEqual(12);
+    expect(evalResult.criticalConcerns.some(c => c.toLowerCase().includes('incomplete'))).toBe(true);
+  });
+
   it('should evaluate valid submission and generate rubric feedback', async () => {
     const validSubmission: SubmissionContent = {
-      assumptions: 'Single entry and exit gate per floor with automated ticketing.',
+      assumptions: 'Single entry and exit gate per floor with automated ticketing and concurrency mutex locks on spots.',
       diagramMermaid: `classDiagram
         class ParkingLot
         class ParkingFloor
@@ -54,6 +78,7 @@ describe('DeterministicValidator & HeuristicEvaluator', () => {
         ParkingFloor *-- ParkingSpot`,
       code: `
         export enum VehicleType { CAR, TRUCK }
+        export enum SpotType { COMPACT, LARGE }
         export interface IParkingStrategy {
           findSpot(vehicle: Vehicle): ParkingSpot;
         }
@@ -63,6 +88,7 @@ describe('DeterministicValidator & HeuristicEvaluator', () => {
         export class Car extends Vehicle {}
         export class ParkingSpot {
           private occupied = false;
+          private lock = new Mutex();
           public isAvailable() { return !this.occupied; }
           public park(v: Vehicle) {
             if (!this.isAvailable()) throw new Error("Occupied");
@@ -71,7 +97,7 @@ describe('DeterministicValidator & HeuristicEvaluator', () => {
         }
       `,
       language: 'typescript',
-      designRationale: 'Used Strategy pattern for spot finding to adhere to Open-Closed Principle.'
+      designRationale: 'Used Strategy pattern for spot finding to adhere to Open-Closed Principle and added mutex locks for thread safety.'
     };
 
     const evalResult = await heuristicEvaluator.evaluate(
@@ -82,9 +108,10 @@ describe('DeterministicValidator & HeuristicEvaluator', () => {
     );
 
     expect(evalResult.status).toBe('COMPLETED');
-    expect(evalResult.overallScore).toBeGreaterThanOrEqual(50);
+    expect(evalResult.overallScore).toBeGreaterThanOrEqual(70);
     expect(evalResult.criteriaFeedback.length).toBe(5);
     expect(evalResult.strengths.length).toBeGreaterThan(0);
     expect(evalResult.actionableRecommendations.length).toBeGreaterThan(0);
   });
 });
+

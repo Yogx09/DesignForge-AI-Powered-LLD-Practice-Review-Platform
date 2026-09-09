@@ -25,7 +25,7 @@ export class GeminiAIEvaluator implements IEvaluator {
     const { checks } = this.validator.validate(problem, submission);
 
     try {
-      const prompt = `You are a Principal Software Architect evaluating a Low-Level Design (LLD) interview solution.
+      const prompt = `You are a Principal Software Architect conducting a rigorous Low-Level Design (LLD) interview code evaluation.
 Problem: "${problem.title}"
 Difficulty: "${problem.difficulty}"
 Problem Requirements:
@@ -47,32 +47,39 @@ ${submission.code || 'None'}
 --- DESIGN RATIONALE ---
 ${submission.designRationale || 'None'}
 
-Evaluate this submission strictly against the following 5 criteria on a scale of 0 to 10:
-1. domain_modeling ("Domain Modeling & Cohesion", weight: 0.25)
-2. abstraction_interfaces ("Abstraction & Interface Segregation", weight: 0.25)
-3. extensibility_patterns ("Extensibility & Design Patterns", weight: 0.20)
-4. edge_cases_concurrency ("Edge Cases, State & Concurrency", weight: 0.15)
-5. rationale_tradeoffs ("Assumptions, Rationale & Trade-offs", weight: 0.15)
+CRITICAL SCORING INSTRUCTIONS:
+1. STRICT ZERO-BASELINE: Start at 0/10 for every criterion. Points must be earned solely through substantive, working LLD architecture.
+2. INCOMPLETE / STUB / MINIMAL CODE PENALTY:
+   - If the code contains fewer than 15 lines, or lacks core domain entities/methods, or is a stub (e.g. 1-2 empty classes), every criterion score MUST be strictly 0, 1, or 2 out of 10.
+   - The overall score for incomplete/minimal submissions MUST NOT exceed 15/100.
+   - Do NOT give charity points or praise for empty/placeholder submissions.
+3. EVIDENCE: Every evidence item MUST be an exact verbatim snippet from the candidate's code. If no code demonstrates the concept, output ["No implementation evidence found in submission."].
+
+Evaluate strictly against these 5 criteria (0 to 10 scale):
+1. domain_modeling ("Requirements & Domain Modeling", weight: 0.25): Entities decomposition, enums, encapsulation, single responsibility.
+2. abstraction_interfaces ("Abstraction & Interfaces", weight: 0.25): Interface contracts, DIP, polymorphism.
+3. extensibility_patterns ("Extensibility & Patterns", weight: 0.20): Strategy, Factory, Observer, OCP compliance.
+4. edge_cases_concurrency ("Edge Cases & Testability", weight: 0.15): Defensive guards, concurrency safety, error handling.
+5. rationale_tradeoffs ("Design Rationale", weight: 0.15): Assumptions depth, complexity trade-offs, architecture justification.
 
 Provide your response in EXACT JSON format with this structure:
 {
   "criteriaFeedback": [
     {
       "criterionId": "domain_modeling",
-      "criterionName": "Domain Modeling & Cohesion",
-      "score": 8,
+      "criterionName": "Requirements & Domain Modeling",
+      "score": 0,
       "maxScore": 10,
       "weight": 0.25,
-      "evidence": ["Quote or line from learner code demonstrating this"],
-      "strengths": ["Specific strength"],
-      "concerns": ["Specific constructive criticism"],
-      "suggestions": ["Concrete actionable advice to improve in next attempt"]
-    },
-    ... (for all 5 criteria)
+      "evidence": ["Exact line or 'No implementation evidence found in submission.'"],
+      "strengths": ["Real strengths if score >= 5, otherwise empty array"],
+      "concerns": ["Specific missing architectural entities or flaws"],
+      "suggestions": ["Concrete actionable advice to implement"]
+    }
   ],
-  "strengths": ["Top 3-4 overall strengths"],
-  "criticalConcerns": ["Top 3 critical design gaps"],
-  "actionableRecommendations": ["Top 3 actionable steps for next version"]
+  "strengths": ["Overall real strengths if any"],
+  "criticalConcerns": ["Top critical design gaps (e.g., Incomplete code, missing entities)"],
+  "actionableRecommendations": ["Concrete next steps"]
 }
 `;
 
