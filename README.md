@@ -30,6 +30,34 @@ The platform provides a complete, structured practice loop for mastering Low-Lev
 
 ---
 
+---
+
+## ⚙️ Environment Configuration & AI Review Modes
+
+The platform features a **fault-tolerant hybrid evaluator architecture**:
+
+| Mode | Trigger | Description |
+| :--- | :--- | :--- |
+| **Live AI Review (`AI_GEMINI`)** | `GEMINI_API_KEY` configured in `.env` or cloud provider | Routes submissions to **Gemini 1.5 Flash** for deep contextual review, natural-language architectural critique, and interactive AI Mentor chat. |
+| **Deterministic Rule Engine (`HEURISTIC_RULE_ENGINE`)** | `GEMINI_API_KEY` omitted or unavailable | Automatically falls back to the zero-config **AST parser & Heuristic Rule Engine**, evaluating domain models, SOLID principles, GoF patterns, and concurrency guards in `<10ms` without external dependencies. |
+
+### Environment Variables (`.env`)
+
+Create a `.env` file in the root or `backend/` directory (or set in Render / Railway environment settings):
+
+```env
+# Optional: Enable Live Gemini AI Evaluation (Get free key at https://aistudio.google.com/)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional: Hosted PostgreSQL URL (Defaults to durable In-Memory store if omitted)
+DATABASE_URL=postgres://user:password@host:5432/dbname?sslmode=require
+
+# Port (Defaults to 4000)
+PORT=4000
+```
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### Prerequisites
@@ -38,22 +66,29 @@ The platform provides a complete, structured practice loop for mastering Low-Lev
 
 ### Installation & Running Locally
 
-1. **Clone or navigate to the repository directory**:
+1. **Clone the repository**:
    ```bash
-   cd Assigment
+   git clone https://github.com/Yogx09/DesignForge-AI-Powered-LLD-Practice-Review-Platform.git
+   cd DesignForge-AI-Powered-LLD-Practice-Review-Platform
    ```
 
-2. **Install all dependencies** (Backend & Frontend):
+2. **(Optional) Configure `.env`**:
+   ```bash
+   cp .env.example .env
+   # Add your GEMINI_API_KEY if you want live Gemini AI evaluation
+   ```
+
+3. **Install dependencies & build**:
    ```bash
    npm run build
    ```
 
-3. **Start both Backend and Frontend concurrently**:
+4. **Start both Backend & Frontend concurrently**:
    ```bash
    npm run dev
    ```
-   - **Backend API**: Running at `http://localhost:4000`
-   - **Frontend UI**: Running at `http://localhost:5173`
+   - **Frontend Studio UI**: `http://localhost:5173`
+   - **Backend REST API**: `http://localhost:4000`
 
 ---
 
