@@ -1,0 +1,16 @@
+{
+  "name": "lld-practice-platform",
+  "version": "1.0.0",
+  "description": "LLD Practice Platform - CipherSchools Engineering Assignment",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently -n backend,frontend -c green,cyan \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "test": "npm --prefix backend test",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "start": "node backend/dist/server.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}
