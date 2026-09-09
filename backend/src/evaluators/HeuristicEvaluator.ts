@@ -15,211 +15,262 @@ export class HeuristicEvaluator implements IEvaluator {
     const startTime = Date.now();
     const { checks, analysis } = this.validator.validate(problem, submission);
 
-    const codeLower = submission.code.toLowerCase();
-    const rationaleLower = submission.designRationale.toLowerCase();
-    const assumptionsLower = submission.assumptions.toLowerCase();
-    const diagramLower = submission.diagramMermaid.toLowerCase();
-    const fullText = `${codeLower} ${rationaleLower} ${assumptionsLower} ${diagramLower}`;
+    const code = submission.code || '';
+    const codeLower = code.toLowerCase();
+    const rationale = submission.designRationale || '';
+    const rationaleLower = rationale.toLowerCase();
+    const assumptions = submission.assumptions || '';
+    const assumptionsLower = assumptions.toLowerCase();
+    const diagram = submission.diagramMermaid || '';
+    const diagramLower = diagram.toLowerCase();
+
+    const lines = code.split('\n').map(l => l.trim()).filter(Boolean);
+
+    // Helper: Find matching lines for evidence
+    const findEvidence = (keywords: string[]): string[] => {
+      const matched: string[] = [];
+      for (const line of lines) {
+        const lineLower = line.toLowerCase();
+        if (keywords.some(k => lineLower.includes(k.toLowerCase()))) {
+          if (!line.startsWith('//') && !line.startsWith('/*')) {
+            matched.push(line.slice(0, 80));
+            if (matched.length >= 3) break;
+          }
+        }
+      }
+      return matched;
+    };
 
     const criteriaFeedback: CriterionFeedback[] = [];
     const allStrengths: string[] = [];
     const allConcerns: string[] = [];
     const allRecommendations: string[] = [];
 
-    // --- CRITERION 1: Domain Modeling & Cohesion (Weight: 25%) ---
-    let domainScore = 5;
+    // =========================================================================
+    // 1. CRITERION: Domain Modeling & Cohesion (Weight: 25%, Max: 10)
+    // =========================================================================
+    let domainScore = 4;
     const domainStrengths: string[] = [];
     const domainConcerns: string[] = [];
     const domainSuggestions: string[] = [];
     const domainEvidence: string[] = [];
 
+    // Check entity decomposition
     if (analysis.classes.length >= 3) {
+      domainScore += 3;
+      domainStrengths.push(`Good domain decomposition into ${analysis.classes.length} distinct classes (${analysis.classes.slice(0, 4).join(', ')}).`);
+      domainEvidence.push(...findEvidence(['class ']));
+    } else if (analysis.classes.length >= 1) {
+      domainScore += 1;
+      domainConcerns.push(`Found only ${analysis.classes.length} class(es). Multiple distinct domain entities are merged together.`);
+      domainSuggestions.push('Decompose the problem into separate domain models (e.g. Spot, Floor, Ticket, Coordinator).');
+    } else {
+      domainConcerns.push('No concrete domain classes defined.');
+      domainSuggestions.push('Define concrete entity classes modeling the core problem domain.');
+    }
+
+    // Check strongly typed enums
+    if (analysis.enums.length > 0) {
       domainScore += 2;
-      domainStrengths.push(`Clean decomposition into ${analysis.classes.length} dedicated domain entities.`);
-      domainEvidence.push(`Classes defined: ${analysis.classes.slice(0, 4).join(', ')}`);
+      domainStrengths.push(`Utilized strongly-typed enums (${analysis.enums.join(', ')}) instead of raw strings.`);
+      domainEvidence.push(...findEvidence(['enum ']));
     } else {
       domainScore -= 1;
-      domainConcerns.push('Low entity granularity; multiple responsibilities appear merged into too few classes.');
-      domainSuggestions.push('Split orchestrator logic from individual domain models to maintain high cohesion.');
+      domainConcerns.push('No enums found for vehicle/spot types or states; relying on raw strings or magic numbers.');
+      domainSuggestions.push('Introduce enums (e.g. VehicleType, SpotType, SlotStatus) for strict compile-time safety.');
     }
 
-    if (analysis.enums.length > 0) {
+    // Check field encapsulation
+    const hasPrivateFields = codeLower.includes('private ') || codeLower.includes('#') || codeLower.includes('readonly ');
+    if (hasPrivateFields) {
       domainScore += 1;
-      domainStrengths.push(`Used explicit enums (${analysis.enums.join(', ')}) instead of magic strings for states/types.`);
-      domainEvidence.push(`Enums: ${analysis.enums.join(', ')}`);
+      domainStrengths.push('Applied clean field encapsulation using private / protected / readonly modifiers.');
+      domainEvidence.push(...findEvidence(['private ', 'readonly ']));
     } else {
-      domainConcerns.push('No enums or type constants found for states/categories.');
-      domainSuggestions.push('Replace string or integer representations of types/statuses with strongly-typed enums.');
-    }
-
-    if (codeLower.includes('private') || codeLower.includes('readonly') || codeLower.includes('protected')) {
-      domainScore += 1;
-      domainStrengths.push('Proper encapsulation applied with private/protected instance fields.');
-    } else {
-      domainConcerns.push('Weak field encapsulation detected; fields might be exposed publicly.');
-      domainSuggestions.push('Make internal state private and provide explicit domain methods rather than naked getters/setters.');
+      domainConcerns.push('Internal entity state is publicly exposed without encapsulation boundaries.');
+      domainSuggestions.push('Make fields private and expose business behaviors through descriptive domain methods.');
     }
 
     domainScore = Math.min(10, Math.max(2, domainScore));
     criteriaFeedback.push({
       criterionId: 'domain_modeling',
-      criterionName: 'Domain Modeling & Cohesion',
+      criterionName: 'Requirements & Domain Modeling',
       score: domainScore,
       maxScore: 10,
       weight: 0.25,
-      evidence: domainEvidence.length > 0 ? domainEvidence : ['Analyzed class declarations and field visibility modifiers.'],
-      strengths: domainStrengths.length > 0 ? domainStrengths : ['Basic entity structure created.'],
-      concerns: domainConcerns.length > 0 ? domainConcerns : ['Entity boundaries could be sharpened further.'],
-      suggestions: domainSuggestions.length > 0 ? domainSuggestions : ['Continue enforcing Single Responsibility Principle across entities.']
+      evidence: domainEvidence.length > 0 ? domainEvidence.slice(0, 3) : ['Evaluated class declarations and state encapsulation.'],
+      strengths: domainStrengths.length > 0 ? domainStrengths : ['Basic class structure declared.'],
+      concerns: domainConcerns.length > 0 ? domainConcerns : ['Entity boundaries could be isolated further.'],
+      suggestions: domainSuggestions.length > 0 ? domainSuggestions : ['Continue enforcing Single Responsibility Principle across all entities.']
     });
 
-    // --- CRITERION 2: Abstraction & Interface Segregation (Weight: 25%) ---
-    let abstractionScore = 4;
+    // =========================================================================
+    // 2. CRITERION: Abstraction & Interface Segregation (Weight: 25%, Max: 10)
+    // =========================================================================
+    let absScore = 3;
     const absStrengths: string[] = [];
     const absConcerns: string[] = [];
     const absSuggestions: string[] = [];
     const absEvidence: string[] = [];
 
-    if (analysis.interfaces.length > 0 || analysis.abstractClasses.length > 0) {
-      abstractionScore += 3;
-      absStrengths.push(`Decoupled interfaces/abstract contracts created (${[...analysis.interfaces, ...analysis.abstractClasses].join(', ')}).`);
-      absEvidence.push(`Contracts: ${[...analysis.interfaces, ...analysis.abstractClasses].join(', ')}`);
+    const totalAbstractions = analysis.interfaces.length + analysis.abstractClasses.length;
+    if (totalAbstractions >= 2) {
+      absScore += 4;
+      absStrengths.push(`Excellent use of abstraction contracts (${[...analysis.interfaces, ...analysis.abstractClasses].join(', ')}).`);
+      absEvidence.push(...findEvidence(['interface ', 'abstract class ']));
+    } else if (totalAbstractions === 1) {
+      absScore += 2;
+      absStrengths.push(`Defined abstraction contract: ${[...analysis.interfaces, ...analysis.abstractClasses].join(', ')}.`);
+      absEvidence.push(...findEvidence(['interface ', 'abstract class ']));
     } else {
-      abstractionScore -= 2;
-      absConcerns.push('Lack of interface contracts; high coupling to concrete implementations (violates DIP).');
-      absSuggestions.push('Introduce interface contracts for variable behaviors (e.g. strategy interfaces or data providers).');
+      absScore -= 1;
+      absConcerns.push('Zero interface contracts found. Caller classes depend directly on concrete implementations (violates Dependency Inversion).');
+      absSuggestions.push('Define interface contracts (e.g. IParkingStrategy, IFeeStrategy) to decouple caller logic.');
     }
 
-    if (codeLower.includes('implements') || codeLower.includes('extends')) {
-      abstractionScore += 2;
-      absStrengths.push('Polymorphism and inheritance used to eliminate switch-case anti-patterns.');
+    if (codeLower.includes('implements ') || codeLower.includes('extends ')) {
+      absScore += 2;
+      absStrengths.push('Polymorphism used to eliminate rigid if-else / switch-case checks.');
+      absEvidence.push(...findEvidence(['implements ', 'extends ']));
     }
 
-    abstractionScore = Math.min(10, Math.max(2, abstractionScore));
+    absScore = Math.min(10, Math.max(2, absScore));
     criteriaFeedback.push({
       criterionId: 'abstraction_interfaces',
-      criterionName: 'Abstraction & Interface Segregation',
-      score: abstractionScore,
+      criterionName: 'Abstraction & Interfaces',
+      score: absScore,
       maxScore: 10,
       weight: 0.25,
-      evidence: absEvidence.length > 0 ? absEvidence : ['Evaluated interface definitions and inheritance hierarchy.'],
-      strengths: absStrengths.length > 0 ? absStrengths : ['Basic class inheritance present.'],
-      concerns: absConcerns.length > 0 ? absConcerns : ['Interfaces could be segregated into more focused client contracts.'],
-      suggestions: absSuggestions.length > 0 ? absSuggestions : ['Ensure caller classes depend on abstractions rather than concrete classes.']
+      evidence: absEvidence.length > 0 ? absEvidence.slice(0, 3) : ['Analyzed inheritance and interface implementations.'],
+      strengths: absStrengths.length > 0 ? absStrengths : ['Basic inheritance present.'],
+      concerns: absConcerns.length > 0 ? absConcerns : ['Caller classes are tightly coupled to concrete instances.'],
+      suggestions: absSuggestions.length > 0 ? absSuggestions : ['Inject dependencies via interface contracts in constructors.']
     });
 
-    // --- CRITERION 3: Extensibility & Design Patterns (Weight: 20%) ---
-    let patternScore = 4;
+    // =========================================================================
+    // 3. CRITERION: Extensibility & Design Patterns (Weight: 20%, Max: 10)
+    // =========================================================================
+    let patScore = 3;
     const patStrengths: string[] = [];
     const patConcerns: string[] = [];
     const patSuggestions: string[] = [];
     const patEvidence: string[] = [];
 
     if (analysis.hasDesignPatternsIdentified.length > 0) {
-      patternScore += 3;
-      patStrengths.push(`Identified relevant GoF patterns: ${analysis.hasDesignPatternsIdentified.join(', ')}.`);
-      patEvidence.push(`Patterns detected in code/diagram: ${analysis.hasDesignPatternsIdentified.join(', ')}`);
+      patScore += 4;
+      patStrengths.push(`Implemented GoF design patterns: ${analysis.hasDesignPatternsIdentified.join(', ')}.`);
+      patEvidence.push(...findEvidence(['strategy', 'factory', 'singleton', 'observer', 'state']));
     } else {
-      patConcerns.push('No clear design patterns detected; algorithm/business variations appear hardcoded.');
-      patSuggestions.push(`Consider applying patterns relevant to ${problem.title}, such as ${problem.referenceKeyConcepts.slice(0, 2).join(' or ')}.`);
+      patConcerns.push('No recognized design patterns detected; algorithmic workflows appear hardcoded into coordinator methods.');
+      patSuggestions.push(`Apply classic patterns relevant to ${problem.title}, such as ${problem.referenceKeyConcepts.slice(0, 2).join(' or ')}.`);
     }
 
-    if (rationaleLower.includes('strategy') || rationaleLower.includes('factory') || rationaleLower.includes('open-closed')) {
-      patternScore += 2;
-      patStrengths.push('Design rationale explicitly explains how the architecture supports future feature extension (Open-Closed Principle).');
+    if (rationaleLower.includes('strategy') || rationaleLower.includes('open-closed') || rationaleLower.includes('factory')) {
+      patScore += 2;
+      patStrengths.push('Design rationale clearly explains how the architecture respects the Open-Closed Principle.');
     }
 
-    patternScore = Math.min(10, Math.max(2, patternScore));
+    patScore = Math.min(10, Math.max(2, patScore));
     criteriaFeedback.push({
       criterionId: 'extensibility_patterns',
-      criterionName: 'Extensibility & Design Patterns',
-      score: patternScore,
+      criterionName: 'Extensibility & Patterns',
+      score: patScore,
       maxScore: 10,
       weight: 0.20,
-      evidence: patEvidence.length > 0 ? patEvidence : ['Inspected extensibility mechanisms and pattern semantics.'],
-      strengths: patStrengths.length > 0 ? patStrengths : ['Clear intention to modularize business logic.'],
-      concerns: patConcerns.length > 0 ? patConcerns : ['Adding new behavior will require modifying existing coordinator classes.'],
-      suggestions: patSuggestions.length > 0 ? patSuggestions : ['Use Factory or Strategy pattern to make algorithm selection dynamically configurable.']
+      evidence: patEvidence.length > 0 ? patEvidence.slice(0, 3) : ['Inspected extensibility points and pattern semantics.'],
+      strengths: patStrengths.length > 0 ? patStrengths : ['Clear modular structure.'],
+      concerns: patConcerns.length > 0 ? patConcerns : ['Adding new behavior requires modifying existing coordinator code.'],
+      suggestions: patSuggestions.length > 0 ? patSuggestions : ['Use Strategy or Factory pattern to make algorithm selection dynamically pluggable.']
     });
 
-    // --- CRITERION 4: Edge Cases, State & Concurrency (Weight: 15%) ---
-    let edgeScore = 4;
+    // =========================================================================
+    // 4. CRITERION: Edge Cases, State & Concurrency (Weight: 15%, Max: 10)
+    // =========================================================================
+    let edgeScore = 3;
     const edgeStrengths: string[] = [];
     const edgeConcerns: string[] = [];
     const edgeSuggestions: string[] = [];
     const edgeEvidence: string[] = [];
 
-    const hasValidation = codeLower.includes('if (!') || codeLower.includes('throw new') || codeLower.includes('return false') || codeLower.includes('null');
-    if (hasValidation) {
-      edgeScore += 2;
-      edgeStrengths.push('Input validation and defensive boundary checks present.');
-      edgeEvidence.push('Contains defensive condition checks / exception handling.');
+    const hasDefensiveChecks = codeLower.includes('throw new') || codeLower.includes('return null') || codeLower.includes('return false') || codeLower.includes('if (!') || codeLower.includes('== null');
+    if (hasDefensiveChecks) {
+      edgeScore += 3;
+      edgeStrengths.push('Defensive boundary checks and error handling present.');
+      edgeEvidence.push(...findEvidence(['throw new', 'return null', 'return false', 'if (!']));
     } else {
-      edgeConcerns.push('Missing boundary validations (e.g. null checks, capacity overflow, invalid state transitions).');
-      edgeSuggestions.push('Add defensive checks for invalid inputs, full capacity, and race conditions.');
+      edgeConcerns.push('Missing boundary validations (e.g. lot full, invalid tickets, null vehicle inputs).');
+      edgeSuggestions.push('Add explicit validation for full capacity, double unparking, and invalid ticket lookups.');
     }
 
-    const hasConcurrencyMention = fullText.includes('thread') || fullText.includes('concurren') || fullText.includes('sync') || fullText.includes('mutex') || fullText.includes('atomic') || fullText.includes('lock');
-    if (hasConcurrencyMention) {
-      edgeScore += 2;
-      edgeStrengths.push('Demonstrated awareness of concurrent access and race condition prevention.');
-      edgeEvidence.push('Concurrency / thread-safety mechanisms referenced.');
+    const hasConcurrency = (codeLower + ' ' + rationaleLower + ' ' + assumptionsLower).includes('thread') ||
+      (codeLower + ' ' + rationaleLower + ' ' + assumptionsLower).includes('concurren') ||
+      (codeLower + ' ' + rationaleLower + ' ' + assumptionsLower).includes('lock') ||
+      (codeLower + ' ' + rationaleLower + ' ' + assumptionsLower).includes('atomic') ||
+      (codeLower + ' ' + rationaleLower + ' ' + assumptionsLower).includes('mutex');
+
+    if (hasConcurrency) {
+      edgeScore += 3;
+      edgeStrengths.push('Demonstrated awareness of thread safety and race conditions during simultaneous entry/exit.');
     } else {
-      edgeConcerns.push('Concurrency and multi-gate/multi-client race conditions were not addressed.');
-      edgeSuggestions.push('Explain how state mutations (e.g. booking a spot or dispatching a car) remain atomic under high concurrency.');
+      edgeConcerns.push('Concurrency and multi-gate race conditions were not addressed in code or design rationale.');
+      edgeSuggestions.push('Explain how spot allocation state transitions remain thread-safe under concurrent requests.');
     }
 
     edgeScore = Math.min(10, Math.max(2, edgeScore));
     criteriaFeedback.push({
       criterionId: 'edge_cases_concurrency',
-      criterionName: 'Edge Cases, State & Concurrency',
+      criterionName: 'Edge Cases & Testability',
       score: edgeScore,
       maxScore: 10,
       weight: 0.15,
-      evidence: edgeEvidence.length > 0 ? edgeEvidence : ['Evaluated defensive programming and state transition guards.'],
-      strengths: edgeStrengths.length > 0 ? edgeStrengths : ['Basic state handling in place.'],
+      evidence: edgeEvidence.length > 0 ? edgeEvidence.slice(0, 3) : ['Evaluated defensive programming and state transition guards.'],
+      strengths: edgeStrengths.length > 0 ? edgeStrengths : ['Basic state checking present.'],
       concerns: edgeConcerns.length > 0 ? edgeConcerns : ['Edge cases like empty states or conflicting operations need explicit guards.'],
       suggestions: edgeSuggestions.length > 0 ? edgeSuggestions : ['Add thread safety considerations and explicit error handling for edge cases.']
     });
 
-    // --- CRITERION 5: Assumptions, Rationale & Trade-offs (Weight: 15%) ---
-    let rationaleScore = 4;
+    // =========================================================================
+    // 5. CRITERION: Assumptions, Rationale & Trade-offs (Weight: 15%, Max: 10)
+    // =========================================================================
+    let ratScore = 3;
     const ratStrengths: string[] = [];
     const ratConcerns: string[] = [];
     const ratSuggestions: string[] = [];
     const ratEvidence: string[] = [];
 
-    if (submission.assumptions.trim().length > 30) {
-      rationaleScore += 2;
-      ratStrengths.push('Well-structured assumptions that constrain problem scope sensibly.');
-      ratEvidence.push(`Assumptions provided: "${submission.assumptions.slice(0, 60)}..."`);
+    if (assumptions.trim().length > 40) {
+      ratScore += 3;
+      ratStrengths.push('Well-structured assumptions constraining scale, gates, and vehicle dimensions.');
+      ratEvidence.push(`Assumptions: "${assumptions.slice(0, 65)}..."`);
     } else {
       ratConcerns.push('Assumptions are minimal or unspecified.');
-      ratSuggestions.push('Document key assumptions regarding throughput, scale, synchronous vs async processing, and payment/persistence guarantees.');
+      ratSuggestions.push('Document explicit assumptions regarding scale, synchronous vs async checkout, and payment gateways.');
     }
 
-    if (submission.designRationale.trim().length > 40) {
-      rationaleScore += 2;
-      ratStrengths.push('Clear design trade-off reasoning provided explaining why specific structures were chosen.');
+    if (rationale.trim().length > 50) {
+      ratScore += 3;
+      ratStrengths.push('Clear architectural rationale explaining why specific patterns and structures were chosen.');
     } else {
-      ratConcerns.push('Lacks trade-off explanations (e.g. latency vs consistency, memory vs computation).');
+      ratConcerns.push('Lacks trade-off defense (e.g. space vs time complexity, consistency vs availability).');
       ratSuggestions.push('Explicitly defend your design decisions and explain alternative approaches you considered and rejected.');
     }
 
-    rationaleScore = Math.min(10, Math.max(2, rationaleScore));
+    ratScore = Math.min(10, Math.max(2, ratScore));
     criteriaFeedback.push({
       criterionId: 'rationale_tradeoffs',
-      criterionName: 'Assumptions, Rationale & Trade-offs',
-      score: rationaleScore,
+      criterionName: 'Design Rationale',
+      score: ratScore,
       maxScore: 10,
       weight: 0.15,
-      evidence: ratEvidence.length > 0 ? ratEvidence : ['Analyzed stated assumptions and rationale section.'],
+      evidence: ratEvidence.length > 0 ? ratEvidence.slice(0, 2) : ['Evaluated stated assumptions and design rationale.'],
       strengths: ratStrengths.length > 0 ? ratStrengths : ['Assumptions documented.'],
       concerns: ratConcerns.length > 0 ? ratConcerns : ['Discuss design trade-offs in greater depth.'],
       suggestions: ratSuggestions.length > 0 ? ratSuggestions : ['Highlight what trade-offs were made and why.']
     });
 
-    // Compute Overall Weighted Score (0 - 100)
+    // =========================================================================
+    // Aggregate Overall Score & Findings
+    // =========================================================================
     let overallScore = 0;
     for (const c of criteriaFeedback) {
       overallScore += (c.score / c.maxScore) * (c.weight * 100);
