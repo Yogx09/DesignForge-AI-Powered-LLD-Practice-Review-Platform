@@ -18,7 +18,12 @@ The repository includes a ready-to-use [`render.yaml`](./render.yaml) blueprint 
    - **Build Command**: `npm install && npm --prefix backend install && npm --prefix frontend install && npm run build`
    - **Start Command**: `node backend/dist/server.js`
    - **Database**: Automatically links `DATABASE_URL` from the PostgreSQL instance.
-5. Click **"Apply"**. Within 2 minutes, your live public URL (e.g. `https://cipher-lld-studio.onrender.com`) will be active!
+5. Click **"Apply"**. Within 2 minutes, your live public URL will be active!
+
+### 🌐 Active Production Deployment
+- **Live URL**: [https://cipher-lld-studio.onrender.com/](https://cipher-lld-studio.onrender.com/)
+- **API Health Check**: [https://cipher-lld-studio.onrender.com/api/health](https://cipher-lld-studio.onrender.com/api/health)
+- **Hosted Environment**: Render Web Service + Managed PostgreSQL (`cipher_lld_db`)
 
 ---
 

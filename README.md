@@ -1,5 +1,13 @@
 # CipherSchools LLD Practice Studio
 
+> 🌐 **Live Hosted Platform**: [https://cipher-lld-studio.onrender.com/](https://cipher-lld-studio.onrender.com/)  
+> 📦 **GitHub Repository**: [https://github.com/Yogx09/DesignForge-AI-Powered-LLD-Practice-Review-Platform](https://github.com/Yogx09/DesignForge-AI-Powered-LLD-Practice-Review-Platform)
+
+[![Live Demo](https://img.shields.io/badge/Render-Live%20Demo-22c55e?style=for-the-badge&logo=render&logoColor=white)](https://cipher-lld-studio.onrender.com/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-3b82f6?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Yogx09/DesignForge-AI-Powered-LLD-Practice-Review-Platform)
+[![Tests Passing](https://img.shields.io/badge/Vitest-9%20Passed-10b981?style=for-the-badge&logo=vitest&logoColor=white)](https://github.com/Yogx09/DesignForge-AI-Powered-LLD-Practice-Review-Platform)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://github.com/Yogx09/DesignForge-AI-Powered-LLD-Practice-Review-Platform)
+
 A focused, extensible Low-Level Design (LLD / Object-Oriented Design) Practice & Evaluation Platform built for the CipherSchools 2-Day Engineering Assignment.
 
 ---
@@ -59,6 +67,8 @@ PORT=4000
 ---
 
 ## 🚀 Quickstart Guide
+
+> 💡 **Try Without Setup**: The application is deployed and available live on the web at **[https://cipher-lld-studio.onrender.com/](https://cipher-lld-studio.onrender.com/)**.
 
 ### Prerequisites
 - Node.js (v18+)

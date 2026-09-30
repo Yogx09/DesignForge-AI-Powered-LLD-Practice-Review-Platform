@@ -2,6 +2,11 @@
   "name": "lld-practice-platform",
   "version": "1.0.0",
   "description": "LLD Practice Platform - CipherSchools Engineering Assignment",
+  "homepage": "https://cipher-lld-studio.onrender.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yogx09/DesignForge-AI-Powered-LLD-Practice-Review-Platform.git"
+  },
   "scripts": {
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
